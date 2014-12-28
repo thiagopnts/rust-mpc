@@ -2,27 +2,26 @@
 
 extern crate libc;
 
-use libc::{c_void, c_char, c_int, uint8_t, free};
-use std::mem;
+use libc::{c_void, c_char, c_int, uint8_t, c_long, free, Nullable};
+use std::{ptr, mem};
 
 #[repr(C)]
 type mpc_val_t = c_void;
 
 #[repr(C)]
-type mpc_dtor_t = fn(*mut mpc_val_t);
+type mpc_dtor_t = unsafe extern fn(*mut mpc_val_t);
 
 #[repr(C)]
-type mpc_ctor_t = fn() -> *mut mpc_val_t;
+type mpc_ctor_t = unsafe extern fn() -> &'static mpc_val_t;
 
 #[repr(C)]
-type mpc_apply_t = fn(*mut mpc_val_t) -> *mut mpc_val_t;
+type mpc_apply_t = unsafe extern fn(&mpc_val_t) -> &'static mpc_val_t;
 
 #[repr(C)]
-type mpc_apply_to_t = fn(*mut mpc_val_t) -> *mut mpc_val_t;
+type mpc_apply_to_t = unsafe extern fn(&mpc_val_t) -> &'static mpc_val_t;
 
 #[repr(C)]
-//FIXME I think this need to be c_like function declaration
-type mpc_fold_t = unsafe fn(c_int, *mut *mut mpc_val_t) -> *mut mpc_val_t;
+type mpc_fold_t = unsafe extern fn(c_int, *mut *mut mpc_val_t) -> &'static mpc_val_t;
 
 #[repr(C)]
 struct mpc_pdata_fail_t {
@@ -196,6 +195,38 @@ impl mpc_pdata_t {
 }
 
 #[repr(C)]
+struct mpc_result_t {
+    pub data: [uint8_t, ..8u],
+}
+
+impl mpc_result_t {
+    pub fn error(&self) -> *const mpc_err_t {
+        self.data.as_ptr() as *const _
+    }
+
+    pub fn output(&self) -> *const mpc_val_t {
+        self.data.as_ptr() as *const _
+    }
+}
+
+#[repr(C)]
+struct mpc_state_t {
+    pos: c_long,
+    row: c_long,
+    col: c_long,
+}
+
+#[repr(C)]
+struct mpc_err_t {
+    state: mpc_state_t,
+    expected_num: c_int,
+    filename: *mut c_char,
+    failure: *mut c_char,
+    expected: *mut *mut c_char,
+    recieved: c_char,
+}
+
+#[repr(C)]
 struct mpc_parser_t {
     pub retained: c_char,
     pub name: *mut c_char,
@@ -208,8 +239,10 @@ extern {
     fn mpc_new(name: *const c_char) -> &mpc_parser_t;
     fn mpc_or(n: c_int, ...) -> &mpc_parser_t;
     fn mpc_sym(name: *const c_char) -> &mpc_parser_t;
-    fn mpc_and(n: c_int, f: mpc_fold_t, ...) -> *mut mpc_parser_t;
+    fn mpc_and(n: c_int, f: mpc_fold_t, ...) -> &mpc_parser_t;
     fn mpc_many(f: mpc_fold_t, parser: &mpc_parser_t) -> &mpc_parser_t;
+    fn mpcf_strfold(n: c_int, xs: *mut *mut mpc_val_t) -> &mpc_val_t;
+    fn mpc_parse(filename: *const c_char, string: *const c_char, p: &mpc_parser_t, r: &mpc_result_t) -> c_int;
 }
 
 #[test]
