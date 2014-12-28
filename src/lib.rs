@@ -245,30 +245,43 @@ extern {
     fn mpc_parse(filename: *const c_char, string: *const c_char, p: &mpc_parser_t, r: &mpc_result_t) -> c_int;
     fn mpc_ast_print(a: *const mpc_ast_t);
     fn mpca_lang(flags: c_int, grammar: *const c_char, ...) -> &mpc_parser_t;
+    fn mpc_cleanup(n: c_int, ...);
 }
 
 #[test]
 fn it_works() {
     let adjective = unsafe {
-        mpc_or(
-            4,
+        mpc_or(4,
             mpc_sym("wow".to_c_str().as_ptr()),
             mpc_sym("many".to_c_str().as_ptr()),
             mpc_sym("so".to_c_str().as_ptr()),
-            mpc_sym("such".to_c_str().as_ptr())
+            mpc_sym("such".to_c_str().as_ptr()),
         )
     };
 
     let noun = unsafe {
-        mpc_or(
-            5,
+        mpc_or(5,
             mpc_sym("lisp".to_c_str().as_ptr()),
             mpc_sym("language".to_c_str().as_ptr()),
             mpc_sym("book".to_c_str().as_ptr()),
             mpc_sym("build".to_c_str().as_ptr()),
-            mpc_sym("c".to_c_str().as_ptr())
+            mpc_sym("c".to_c_str().as_ptr()),
         )
     };
 
-//let number = unsafe { mpc_new("number".to_c_str().as_ptr()) };
+    let phrase = unsafe {
+        mpc_and(2, mpcf_strfold, adjective, noun, free)
+    };
+
+    let doge = unsafe {
+        mpc_many(mpcf_strfold, phrase)
+    };
+
+    let mut r = mpc_result_t { data: [1u8, ..8] };
+    let ret = unsafe { mpc_parse("<stdin>".to_c_str().as_ptr(), "so c".to_c_str().as_ptr(), doge, &r) };
+    if ret == 1 {
+        unsafe { mpc_ast_print(r.output() as *const mpc_ast_t); };
+    } else {
+        println!("deu erroror");
+    }
 }
