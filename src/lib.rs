@@ -130,21 +130,6 @@ enum MPCLang {
 #[repr(C)]
 struct mpc_pdata_t {
     pub data: [uint8_t, ..32u],
-//  fail: mpc_pdata_fail_t,
-//  lift: mpc_pdata_lift_t,
-//  expect: mpc_pdata_expect_t,
-//  anchor: mpc_pdata_anchor_t,
-//  single: mpc_pdata_single_t,
-//  range: mpc_pdata_range_t,
-//  satisfy: mpc_pdata_satisfy_t,
-//  string: mpc_pdata_string_t,
-//  apply: mpc_pdata_apply_t,
-//  apply_to: mpc_pdata_apply_to_t,
-//  predict: mpc_pdata_predict_t,
-//  not: mpc_pdata_not_t,
-//  repeat: mpc_pdata_repeat_t,
-//  and: mpc_pdata_and_t,
-//  or: mpc_pdata_or_t,
 }
 
 impl mpc_pdata_t {
