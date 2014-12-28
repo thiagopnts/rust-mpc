@@ -67,6 +67,15 @@ struct mpc_pdata_string_t {
 }
 
 #[repr(C)]
+struct mpc_ast_t {
+    tag: *mut c_char,
+    contents: *mut c_char,
+    state: mpc_state_t,
+    children_num: c_int,
+    children: *mut *mut mpc_ast_t,
+}
+
+#[repr(C)]
 struct mpc_pdata_apply_t {
     x: *mut mpc_parser_t,
     f: mpc_apply_t,
@@ -110,6 +119,12 @@ struct mpc_pdata_and_t {
     n: c_int,
     f: mpc_fold_t,
     xs: *mut *mut mpc_parser_t,
+}
+
+enum MPCLang {
+    MPCA_LANG_DEFAULT              = 0,
+    MPCA_LANG_PREDICTIVE           = 1,
+    MPCA_LANG_WHITESPACE_SENSITIVE = 2,
 }
 
 #[repr(C)]
@@ -243,6 +258,8 @@ extern {
     fn mpc_many(f: mpc_fold_t, parser: &mpc_parser_t) -> &mpc_parser_t;
     fn mpcf_strfold(n: c_int, xs: *mut *mut mpc_val_t) -> &mpc_val_t;
     fn mpc_parse(filename: *const c_char, string: *const c_char, p: &mpc_parser_t, r: &mpc_result_t) -> c_int;
+    fn mpc_ast_print(a: *const mpc_ast_t);
+    fn mpca_lang(flags: c_int, grammar: *const c_char, ...) -> &mpc_parser_t;
 }
 
 #[test]
