@@ -2,8 +2,8 @@
 
 extern crate libc;
 
-use libc::{c_void, c_char, c_int, uint8_t, c_long, free, Nullable};
-use std::{ptr, mem};
+use libc::{c_void, c_char, c_int, uint8_t, c_long, free};
+use std::mem;
 
 #[repr(C)]
 type mpc_val_t = c_void;
