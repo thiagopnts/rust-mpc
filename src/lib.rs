@@ -241,7 +241,8 @@ struct mpc_err_t {
 struct mpc_parser_t {
     pub retained: c_char,
     pub name: *mut c_char,
-    pub _type: c_char,
+    // actually this is a c_char but i'm setting to *mut to align mpc_parser_t
+    pub _type: *mut c_char,
     pub data: mpc_pdata_t,
 }
 
