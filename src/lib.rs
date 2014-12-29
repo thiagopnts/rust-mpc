@@ -12,19 +12,19 @@ use std::mem;
 pub type mpc_val_t = c_void;
 
 #[repr(C)]
-pub type mpc_dtor_t = extern fn(*mut mpc_val_t);
+pub type mpc_dtor_t = unsafe extern fn(*mut mpc_val_t);
 
 #[repr(C)]
-pub type mpc_ctor_t = extern fn() -> *mut mpc_val_t;
+pub type mpc_ctor_t = unsafe extern fn() -> *mut mpc_val_t;
 
 #[repr(C)]
-pub type mpc_apply_t = extern fn(*mut mpc_val_t) -> *mut  mpc_val_t;
+pub type mpc_apply_t = unsafe extern fn(*mut mpc_val_t) -> *mut  mpc_val_t;
 
 #[repr(C)]
-pub type mpc_apply_to_t = extern fn(*mut mpc_val_t) -> *mut mpc_val_t;
+pub type mpc_apply_to_t = unsafe extern fn(*mut mpc_val_t) -> *mut mpc_val_t;
 
 #[repr(C)]
-pub type mpc_fold_t = extern fn(c_int, *mut *mut mpc_val_t) -> *mut mpc_val_t;
+pub type mpc_fold_t = unsafe extern fn(c_int, *mut *mut mpc_val_t) -> *mut mpc_val_t;
 
 #[repr(C)]
 #[deriving(Show)]
@@ -47,7 +47,7 @@ struct mpc_pdata_expect_t {
 
 #[repr(C)]
 struct mpc_pdata_anchor_t {
-    pub f: extern fn(c_char, c_char) -> c_int,
+    pub f: unsafe extern fn(c_char, c_char) -> c_int,
 }
 
 #[repr(C)]
@@ -65,7 +65,7 @@ struct mpc_pdata_range_t {
 
 #[repr(C)]
 struct mpc_pdata_satisfy_t {
-   pub f: extern fn(c_char) -> c_int,
+   pub f: unsafe extern fn(c_char) -> c_int,
 }
 
 #[repr(C)]
