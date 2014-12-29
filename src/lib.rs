@@ -1,84 +1,93 @@
 #![feature(link_args)]
+#![allow(dead_code)]
+#![allow(raw_pointer_deriving)]
+#![allow(unused_imports)]
 
 extern crate libc;
 
-use libc::{c_void, c_char, c_int, uint8_t, c_long, free};
+use libc::{c_void, c_char, c_int, uint8_t, c_long, free, puts};
 use std::mem;
 
 #[repr(C)]
-type mpc_val_t = c_void;
+pub type mpc_val_t = c_void;
 
 #[repr(C)]
-type mpc_dtor_t = unsafe extern fn(*mut mpc_val_t);
+pub type mpc_dtor_t = extern fn(*mut mpc_val_t);
 
 #[repr(C)]
-type mpc_ctor_t = unsafe extern fn() -> &'static mpc_val_t;
+pub type mpc_ctor_t = extern fn() -> *mut mpc_val_t;
 
 #[repr(C)]
-type mpc_apply_t = unsafe extern fn(&mpc_val_t) -> &'static mpc_val_t;
+pub type mpc_apply_t = extern fn(*mut mpc_val_t) -> *mut  mpc_val_t;
 
 #[repr(C)]
-type mpc_apply_to_t = unsafe extern fn(&mpc_val_t) -> &'static mpc_val_t;
+pub type mpc_apply_to_t = extern fn(*mut mpc_val_t) -> *mut mpc_val_t;
 
 #[repr(C)]
-type mpc_fold_t = unsafe extern fn(c_int, *mut *mut mpc_val_t) -> &'static mpc_val_t;
+pub type mpc_fold_t = extern fn(c_int, *mut *mut mpc_val_t) -> *mut mpc_val_t;
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_fail_t {
-    m: *mut c_char
+   pub m: *mut c_char
 }
 
 #[repr(C)]
 struct mpc_pdata_lift_t {
-    lf: mpc_ctor_t,
-    x: *mut c_void,
+   pub lf: mpc_ctor_t,
+   pub x: *mut c_void,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_expect_t {
-    x: *mut mpc_parser_t,
-    m: *mut c_char,
+   pub x: *mut mpc_parser_t,
+   pub m: *mut c_char,
 }
 
 #[repr(C)]
 struct mpc_pdata_anchor_t {
-    f: fn(c_char, c_char) -> c_int,
+    pub f: extern fn(c_char, c_char) -> c_int,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_single_t {
-    x: c_char,
+   pub x: c_char,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_range_t {
-    x: c_char,
-    y: c_char,
+   pub x: c_char,
+   pub y: c_char,
 }
 
 #[repr(C)]
 struct mpc_pdata_satisfy_t {
-    f: fn(c_char) -> c_int,
+   pub f: extern fn(c_char) -> c_int,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_string_t {
-    x: *mut c_char,
+    pub x: *mut c_char,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_ast_t {
-    tag: *mut c_char,
-    contents: *mut c_char,
-    state: mpc_state_t,
-    children_num: c_int,
-    children: *mut *mut mpc_ast_t,
+  pub tag: *mut c_char,
+  pub contents: *mut c_char,
+  pub state: mpc_state_t,
+  pub children_num: c_int,
+  pub children: *mut *mut mpc_ast_t,
 }
 
 #[repr(C)]
 struct mpc_pdata_apply_t {
-    x: *mut mpc_parser_t,
-    f: mpc_apply_t,
+   pub x: *mut mpc_parser_t,
+   pub f: mpc_apply_t,
 }
 
 #[repr(C)]
@@ -89,144 +98,146 @@ struct mpc_pdata_apply_to_t {
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_predict_t {
-    x: *mut mpc_parser_t,
+   pub x: *mut mpc_parser_t,
 }
 
 #[repr(C)]
 struct mpc_pdata_not_t {
-    x: *mut mpc_parser_t,
-    dx: mpc_dtor_t,
-    lf: mpc_dtor_t,
+   pub x: *mut mpc_parser_t,
+   pub dx: mpc_dtor_t,
+   pub lf: mpc_ctor_t,
 }
 
 #[repr(C)]
 struct mpc_pdata_repeat_t {
-    n: c_int,
-    f: mpc_fold_t,
-    x: *mut mpc_parser_t,
-    dx: mpc_dtor_t,
+   pub n: c_int,
+   pub f: mpc_fold_t,
+   pub x: *mut mpc_parser_t,
+   pub dx: mpc_dtor_t,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_or_t {
-    n: c_int,
-    xs: *mut *mut mpc_parser_t,
+   pub n: c_int,
+   pub xs: *mut *mut mpc_parser_t,
 }
 
 #[repr(C)]
 struct mpc_pdata_and_t {
-    n: c_int,
-    f: mpc_fold_t,
-    xs: *mut *mut mpc_parser_t,
-}
-
-enum MPCLang {
-    MPCA_LANG_DEFAULT              = 0,
-    MPCA_LANG_PREDICTIVE           = 1,
-    MPCA_LANG_WHITESPACE_SENSITIVE = 2,
+   pub n: c_int,
+   pub f: mpc_fold_t,
+   pub xs: *mut *mut mpc_parser_t,
+   pub dxs: *mut mpc_dtor_t,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_pdata_t {
     pub data: [uint8_t, ..32u],
 }
 
 impl mpc_pdata_t {
-    pub fn fail(&self) -> *const mpc_pdata_fail_t {
-        self.data.as_ptr() as *const _
+    pub fn fail(&mut self) -> *mut [uint8_t, ..8u] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn lift(&self) -> *const mpc_pdata_lift_t {
-        self.data.as_ptr() as *const _
+    pub fn lift(&mut self) -> *mut [uint8_t, ..16u] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn expect(&self) -> *const mpc_pdata_expect_t {
-        self.data.as_ptr() as *const _
+    pub fn expect(&mut self) -> *mut [uint8_t, ..16u] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn anchor(&self) -> *const mpc_pdata_anchor_t {
-        self.data.as_ptr() as *const _
+    pub fn anchor(&mut self) -> *mut [uint8_t, ..8u] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn single(&self) -> *const mpc_pdata_single_t {
-        self.data.as_ptr() as *const _
+    pub fn single(&mut self) -> *mut [uint8_t, ..1u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn range(&self) -> *const mpc_pdata_range_t {
-        self.data.as_ptr() as *const _
+    pub fn range(&mut self) -> *mut [uint8_t, ..2u] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn satisfy(&self) -> *const mpc_pdata_satisfy_t {
-        self.data.as_ptr() as *const _
+    pub fn satisfy(&mut self) -> *mut [uint8_t, ..8u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn string(&self) -> *const mpc_pdata_string_t {
-        self.data.as_ptr() as *const _
+    pub fn string(&mut self) -> *mut [uint8_t, ..8u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn apply(&self) -> *const mpc_pdata_apply_t {
-        self.data.as_ptr() as *const _
+    pub fn apply(&mut self) -> *mut [uint8_t, ..16u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn apply_to(&self) -> *const mpc_pdata_apply_to_t {
-        self.data.as_ptr() as *const _
+    pub fn apply_to(&mut self) -> *mut [uint8_t, ..24u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn predict(&self) -> *const mpc_pdata_predict_t {
-        self.data.as_ptr() as *const _
+    pub fn predict(&mut self) -> *mut [uint8_t, ..8u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn not(&self) -> *const mpc_pdata_not_t {
-        self.data.as_ptr() as *const _
+    pub fn not(&mut self) -> *mut [uint8_t, ..24u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn repeat(&self) -> *const mpc_pdata_repeat_t {
-        self.data.as_ptr() as *const _
+    pub fn repeat(&mut self) -> *mut [uint8_t, ..32u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn and(&self) -> *const mpc_pdata_and_t {
-        self.data.as_ptr() as *const _
+    pub fn and(&mut self) -> *mut [uint8_t, ..32u]{
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn or(&self) -> *const mpc_pdata_or_t {
-        self.data.as_ptr() as *const _
+    pub fn or(&mut self) -> *mut [uint8_t, ..16u]{
+        unsafe { mem::transmute(self) }
     }
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_result_t {
     pub data: [uint8_t, ..8u],
 }
 
 impl mpc_result_t {
-    pub fn error(&self) -> *const mpc_err_t {
-        self.data.as_ptr() as *const _
+    pub fn error(&mut self) -> *mut [uint8_t, ..64] {
+        unsafe { mem::transmute(self) }
     }
 
-    pub fn output(&self) -> *const mpc_val_t {
-        self.data.as_ptr() as *const _
+    pub fn output(&mut self) -> *mut [uint8_t, ..1] {
+        unsafe { mem::transmute(self) }
     }
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_state_t {
-    pos: c_long,
-    row: c_long,
-    col: c_long,
+   pub pos: c_long,
+   pub row: c_long,
+   pub col: c_long,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_err_t {
-    state: mpc_state_t,
-    expected_num: c_int,
-    filename: *mut c_char,
-    failure: *mut c_char,
-    expected: *mut *mut c_char,
-    recieved: c_char,
+   pub state: mpc_state_t,
+   pub expected_num: c_int,
+   pub filename: *mut c_char,
+   pub failure: *mut c_char,
+   pub expected: *mut *mut c_char,
+   pub recieved: c_char,
 }
 
 #[repr(C)]
+#[deriving(Show)]
 struct mpc_parser_t {
     pub retained: c_char,
     pub name: *mut c_char,
@@ -236,52 +247,30 @@ struct mpc_parser_t {
 
 #[link_args = "./src/mpc.c -ledit -lm"]
 extern {
-    fn mpc_new(name: *const c_char) -> &mpc_parser_t;
-    fn mpc_or(n: c_int, ...) -> &mpc_parser_t;
-    fn mpc_sym(name: *const c_char) -> &mpc_parser_t;
-    fn mpc_and(n: c_int, f: mpc_fold_t, ...) -> &mpc_parser_t;
-    fn mpc_many(f: mpc_fold_t, parser: &mpc_parser_t) -> &mpc_parser_t;
-    fn mpcf_strfold(n: c_int, xs: *mut *mut mpc_val_t) -> &mpc_val_t;
-    fn mpc_parse(filename: *const c_char, string: *const c_char, p: &mpc_parser_t, r: &mpc_result_t) -> c_int;
-    fn mpc_ast_print(a: *const mpc_ast_t);
-    fn mpca_lang(flags: c_int, grammar: *const c_char, ...) -> &mpc_parser_t;
+    fn mpc_new(name: *const c_char) -> *mut mpc_parser_t;
+    fn mpc_or(n: c_int, ...) -> *mut mpc_parser_t;
+    fn mpc_sym(name: *const c_char) -> *mut mpc_parser_t;
+    fn mpc_and(n: c_int, f: mpc_fold_t, ...) -> *mut mpc_parser_t;
+    fn mpc_many(f: mpc_fold_t, parser: *mut mpc_parser_t) -> *mut mpc_parser_t;
+    fn mpcf_strfold(n: c_int, xs: *mut *mut mpc_val_t) -> *mut mpc_val_t;
+    fn mpc_parse(filename: *const c_char, string: *const c_char, p: *mut mpc_parser_t, r: *mut mpc_result_t) -> c_int;
+    fn mpc_parse_contents(filename: *const c_char, p: *mut mpc_parser_t, r: *mut mpc_result_t) -> c_int;
+    fn mpc_ast_print(a: *mut mpc_ast_t);
+    fn mpca_lang(flags: c_int, grammar: *const c_char, ...) -> *mut mpc_parser_t;
     fn mpc_cleanup(n: c_int, ...);
 }
 
 #[test]
 fn it_works() {
-    let adjective = unsafe {
-        mpc_or(4,
-            mpc_sym("wow".to_c_str().as_ptr()),
-            mpc_sym("many".to_c_str().as_ptr()),
-            mpc_sym("so".to_c_str().as_ptr()),
-            mpc_sym("such".to_c_str().as_ptr()),
-        )
+   println!("pdata or size: {}", mem::size_of::<mpc_pdata_t>());
+    unsafe {
+        let adj = mpc_or(2,
+                         mpc_sym("wow".to_c_str().as_mut_ptr()),
+                         mpc_sym("haha".to_c_str().as_mut_ptr())
+                        );
+        println!("n: {}", (*((*adj).data.or() as *mut mpc_pdata_or_t)).n);
+        (*((*adj).data.or() as *mut mpc_pdata_or_t)).n = 1;
+        println!("n: {}", (*((*adj).data.or() as *mut mpc_pdata_or_t)).n);
     };
 
-    let noun = unsafe {
-        mpc_or(5,
-            mpc_sym("lisp".to_c_str().as_ptr()),
-            mpc_sym("language".to_c_str().as_ptr()),
-            mpc_sym("book".to_c_str().as_ptr()),
-            mpc_sym("build".to_c_str().as_ptr()),
-            mpc_sym("c".to_c_str().as_ptr()),
-        )
-    };
-
-    let phrase = unsafe {
-        mpc_and(2, mpcf_strfold, adjective, noun, free)
-    };
-
-    let doge = unsafe {
-        mpc_many(mpcf_strfold, phrase)
-    };
-
-    let mut r = mpc_result_t { data: [1u8, ..8] };
-    let ret = unsafe { mpc_parse("<stdin>".to_c_str().as_ptr(), "so c".to_c_str().as_ptr(), doge, &r) };
-    if ret == 1 {
-        unsafe { mpc_ast_print(r.output() as *const mpc_ast_t); };
-    } else {
-        println!("deu erroror");
-    }
 }
