@@ -703,7 +703,7 @@ typedef struct { int n; mpc_fold_t f; mpc_parser_t *x; mpc_dtor_t dx; } mpc_pdat
 typedef struct { int n; mpc_parser_t **xs; } mpc_pdata_or_t;
 typedef struct { int n; mpc_fold_t f; mpc_parser_t **xs; mpc_dtor_t *dxs;  } mpc_pdata_and_t;
 
-typedef union {
+typedef struct {
   mpc_pdata_fail_t fail;
   mpc_pdata_lift_t lift;
   mpc_pdata_expect_t expect;

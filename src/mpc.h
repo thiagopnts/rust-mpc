@@ -51,7 +51,7 @@ void mpc_err_print_to(mpc_err_t *e, FILE *f);
 
 typedef void mpc_val_t;
 
-typedef union {
+typedef struct {
   mpc_err_t *error;
   mpc_val_t *output;
 } mpc_result_t;
