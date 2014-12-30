@@ -1637,8 +1637,6 @@ mpc_parser_t *mpc_or(int n, ...) {
   
   p->type = MPC_TYPE_OR;
   p->data.or.n = n;
-  printf("n set: %d\n", p->data.or.n);
-  printf("type set: %d\n", p->type);
   p->data.or.xs = malloc(sizeof(mpc_parser_t*) * n);
   
   va_start(va, n);  
