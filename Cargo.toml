@@ -5,3 +5,7 @@ version = "0.0.1"
 authors = ["Thiago Pontes <thiagopnts@gmail.com>"]
 description = "Rust bindings for mpc lib"
 
+[dependencies]
+
+libc = "0.1"
+
