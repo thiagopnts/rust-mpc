@@ -8,4 +8,5 @@ description = "Rust bindings for mpc lib"
 [dependencies]
 
 libc = "0.1"
+readline = "0.0.4"
 
