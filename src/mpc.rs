@@ -1157,6 +1157,10 @@ impl Union_Unnamed10 {
 impl ::std::default::Default for Union_Unnamed10 {
     fn default() -> Union_Unnamed10 { unsafe { ::std::mem::zeroed() } }
 }
+
+pub fn mpc_result_new() -> mpc_result_t {
+    unsafe {::std::mem::zeroed() }
+}
 pub type mpc_result_t = Union_Unnamed10;
 pub enum Struct_mpc_parser_t { }
 pub type mpc_parser_t = Struct_mpc_parser_t;
